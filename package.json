@@ -1,0 +1,32 @@
+{
+  "name": "myexpress",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel src -d dist",
+    "start": "npm run build && node dist/server.js",
+    "start:dev": "nodemon --exec babel-node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/node": "^7.14.9",
+    "@babel/preset-env": "^7.15.0",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.12"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.14.8",
+    "@babel/plugin-transform-runtime": "^7.15.0",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^7.4.3",
+    "csrf": "^3.1.0",
+    "dotenv": "^10.0.0",
+    "express-session": "^1.17.2",
+    "jsonwebtoken": "^8.5.1",
+    "uuid": "^8.3.2"
+  }
+}
