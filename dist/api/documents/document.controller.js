@@ -104,7 +104,18 @@ var DocumentController = /*#__PURE__*/function () {
       return document.toJson();
     });
     (0, _defineProperty2["default"])(this, "findAll", function (req, res) {
-      throw new Error("Method not implemented.");
+      var offset = req.query.offset;
+      var size = req.query.size;
+
+      if (!offset || offset < 0 || offset > Number.MAX_SAFE_INTEGER) {
+        offset = 0;
+      }
+
+      if (!size || size < 1 || size > 5) {
+        size = 5;
+      }
+
+      _this.documentService.readAllDocument(offset, size);
     });
     (0, _defineProperty2["default"])(this, "publish", function (req, res) {
       var documentId = req.params.documentId;

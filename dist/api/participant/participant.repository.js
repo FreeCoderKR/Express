@@ -21,6 +21,8 @@ var ParticipantRepository = /*#__PURE__*/function () {
   function ParticipantRepository() {
     (0, _classCallCheck2["default"])(this, ParticipantRepository);
     (0, _defineProperty2["default"])(this, "tableName", "participants");
+    (0, _defineProperty2["default"])(this, "historyTableName", "participant_histories");
+    (0, _defineProperty2["default"])(this, "historyinsertsql", ["INSERT INTO", this.historyTableName, "(participant_id, type, data, created_at)", "VALUES", "($participant_id, $type, $data, $created_at)"].join(" "));
   }
 
   (0, _createClass2["default"])(ParticipantRepository, [{
@@ -33,6 +35,9 @@ var ParticipantRepository = /*#__PURE__*/function () {
   }, {
     key: "findByDocumentIdAndEmail",
     value: function findByDocumentIdAndEmail(documentId, email) {
+      console.log(documentId);
+      console.log(email);
+
       var raw = _database.db.prepare("SELECT * FROM ".concat(this.tableName, " WHERE document_id = ? and email = ?")).get(documentId, email);
 
       return _participantEntity.Participant.fromJson(raw);
@@ -50,12 +55,70 @@ var ParticipantRepository = /*#__PURE__*/function () {
   }, {
     key: "create",
     value: function create(raw) {
-      return _database.db.prepare(["INSERT INTO", this.tableName, "(id, document_id, name, email, status, created_at, updated_at)", "VALUES", "($id, $documentId, $name, $email, $status, $created_at, $updated_at)"].join(" ")).run(raw);
+      var now = new Date().toISOString();
+
+      var create_result = _database.db.prepare(["INSERT INTO", this.tableName, "(id, document_id, name, email, status, created_at, updated_at)", "VALUES", "($id, $documentId, $name, $email, $status, $created_at, $updated_at)"].join(" ")).run(raw);
+
+      var history = {
+        participant_id: raw.id,
+        type: "CREATE",
+        data: JSON.stringify(raw),
+        created_at: now
+      };
+
+      _database.db.prepare(this.historyinsertsql).run(history);
+
+      return create_result;
+    }
+  }, {
+    key: "delete",
+    value: function _delete(documentId) {
+      var _this = this;
+
+      var now = new Date().toISOString();
+
+      var delete_result = _database.db.prepare("UPDATE ".concat(this.tableName, " SET STATUS=?, updated_at=? WHERE document_id=?")).run("DELETED", now, documentId);
+
+      var results = this.findAllByDocumentId(documentId);
+      results.forEach(function (result) {
+        var history = {
+          participant_id: result.id,
+          type: "DELETE",
+          data: JSON.stringify({
+            status: "DELETED",
+            updated_at: now
+          }),
+          created_at: now
+        };
+
+        _database.db.prepare(_this.historyinsertsql).run(history);
+      });
+      return delete_result;
     }
   }, {
     key: "updateInvited",
     value: function updateInvited(documentId) {
-      return _database.db.prepare("UPDATE ".concat(this.tableName, " SET STATUS=INVITED WHERE document_id=?")).run(documentId);
+      var _this2 = this;
+
+      var now = new Date().toISOString();
+
+      var update_result = _database.db.prepare("UPDATE ".concat(this.tableName, " SET STATUS=?, updated_at=? WHERE document_id=?")).run("INVITED", now, documentId);
+
+      var results = this.findAllByDocumentId(documentId);
+      results.forEach(function (result) {
+        var history = {
+          participant_id: result.id,
+          type: "INVITE",
+          data: JSON.stringify({
+            status: "INVITED",
+            updated_at: now
+          }),
+          created_at: now
+        };
+
+        _database.db.prepare(_this2.historyinsertsql).run(history);
+      });
+      return update_result;
     }
   }]);
   return ParticipantRepository;

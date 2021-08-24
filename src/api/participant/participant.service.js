@@ -4,8 +4,9 @@ import * as jwt from "../../lib/jwt.js";
 const disableStatuses = Object.freeze(["CREATED", "DELETED"]);
 
 export class ParticipantService {
-  constructor(participantRepository) {
+  constructor(participantRepository, documentRepository) {
     this.participantRepository = participantRepository;
+    this.documentRepository = documentRepository;
   }
 
   issueAccessToken({ documentId, email }) {
@@ -24,5 +25,14 @@ export class ParticipantService {
     });
 
     return [token, participant.toJson()];
+  }
+  readDocument(documentId, participantId) {
+    const document = this.documentRepository.findOne(documentId);
+    const result = this.participantRepository.readDocument(participantId);
+    if (result.changes == 1) {
+      return { document: document.toSimpleJson() };
+    } else {
+      return false;
+    }
   }
 }

@@ -16,6 +16,7 @@ var verifyJWT = function verifyJWT(req, res, next) {
     try {
       var token = bearerToken.replace(/^Bearer /, "");
       var decoded = (0, _jwt.verify)(token);
+      console.log(decoded);
       next();
     } catch (err) {
       next(new _index.UnauthorizedException());

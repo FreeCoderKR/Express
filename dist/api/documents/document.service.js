@@ -23,7 +23,8 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-// const disableStatuses = Object.freeze(["CREATED", "DELETED"]);
+var disableStatuses = Object.freeze(["CREATED", "DELETED"]);
+
 var DocumentService = /*#__PURE__*/function () {
   function DocumentService(documentRepository, participantRepository) {
     (0, _classCallCheck2["default"])(this, DocumentService);
@@ -49,7 +50,6 @@ var DocumentService = /*#__PURE__*/function () {
         updated_at: now
       };
       this.documentRepository.create(document_input);
-      this.documentRepository.insertDocumentHistory(document_input);
       participants.forEach(function (element) {
         var name = element.name,
             email = element.email;
@@ -75,8 +75,22 @@ var DocumentService = /*#__PURE__*/function () {
     }
   }, {
     key: "readAllDocument",
-    value: function readAllDocument() {// const result = this.documentRepository.findAll();
-      // console.log(result);
+    value: function readAllDocument(offset, size) {
+      var _this2 = this;
+
+      console.log(offset);
+      console.log(size);
+      var documents = this.documentRepository.findAll(offset, size);
+
+      if (documents.length != 0) {
+        documents.map(function (document) {
+          return document.participant = _this2.participantRepository.findAllByDocumentId(documentId).map(function (participant) {
+            return participant.toJson();
+          });
+        }).toJson();
+      }
+
+      return documents;
     }
   }, {
     key: "readDocument",
@@ -104,9 +118,10 @@ var DocumentService = /*#__PURE__*/function () {
   }, {
     key: "removeDocument",
     value: function removeDocument(id) {
-      var result = this.documentRepository["delete"](id);
+      var delete_result = this.documentRepository["delete"](id);
 
-      if (result.changes == 1) {
+      if (delete_result.changes == 1) {
+        this.participantRepository["delete"](id);
         return true;
       } else {
         return false;
@@ -115,9 +130,9 @@ var DocumentService = /*#__PURE__*/function () {
   }, {
     key: "publishDocument",
     value: function publishDocument(id) {
-      var result = this.documentRepository.updatePublish(id);
+      var publish_result = this.documentRepository.updatePublish(id);
 
-      if (result.changes == 1) {
+      if (publish_result.changes == 1) {
         this.participantRepository.updateInvited(id);
         return true;
       } else {

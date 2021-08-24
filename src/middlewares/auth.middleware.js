@@ -8,6 +8,7 @@ export const verifyJWT = (req, res, next) => {
     try {
       const token = bearerToken.replace(/^Bearer /, "");
       const decoded = verify(token);
+      console.log(decoded);
 
       next();
     } catch (err) {

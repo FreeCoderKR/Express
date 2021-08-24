@@ -157,12 +157,13 @@ var UserController = /*#__PURE__*/function () {
                 token = _yield$_this$userServ2[0];
                 user = _yield$_this$userServ2[1];
                 req.session.email = email;
+                req.session.status = "user";
                 return _context2.abrupt("return", {
                   token: token,
                   user: user
                 });
 
-              case 17:
+              case 18:
               case "end":
                 return _context2.stop();
             }

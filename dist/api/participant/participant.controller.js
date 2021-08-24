@@ -45,12 +45,14 @@ var ParticipantController = /*#__PURE__*/function () {
           participant = _this$participantServ2[1];
 
       req.session.email = participant.email;
+      req.session.status = "participant";
       return {
         token: token,
         participant: participant
       };
     });
     (0, _defineProperty2["default"])(this, "readDocument", function (req, res) {
+      console.dir(req.session);
       throw new Error("Method not implemented.");
     });
     (0, _defineProperty2["default"])(this, "sign", function (req, res) {
