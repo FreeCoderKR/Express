@@ -4,6 +4,14 @@ import { Participant } from "./entities/participant.entity.js";
 export class ParticipantRepository {
     tableName = "participants";
     historyTableName = "participant_histories";
+    historyinsertsql = [
+        "INSERT INTO",
+        this.historyTableName,
+        "(participant_id, type, data, created_at)",
+        "VALUES",
+        "($participant_id, $type, $data, $created_at)",
+    ].join(" ");
+
     findById(id) {
         const raw = db
             .prepare(`SELECT * FROM ${this.tableName} WHERE id = ?`)
@@ -28,7 +36,8 @@ export class ParticipantRepository {
         return rows;
     }
     create(raw) {
-        return db
+        const now = new Date().toISOString();
+        const create_result = db
             .prepare(
                 [
                     "INSERT INTO",
@@ -39,31 +48,52 @@ export class ParticipantRepository {
                 ].join(" ")
             )
             .run(raw);
-    }
-    updateInvited(documentId) {
-        return db
-            .prepare(
-                `UPDATE ${this.tableName} SET STATUS=INVITED WHERE document_id=?`
-            )
-            .run(documentId);
-    }
-    insertParticipantHistory(raw) {
-        const newraw = {
+        const history = {
             participant_id: raw.id,
             type: "CREATE",
             data: JSON.stringify(raw),
-            created_at: raw.created_at,
+            created_at: now,
         };
-        return db
+        db.prepare(historyinsertsql).run(history);
+        return create_result;
+    }
+    delete(documentId) {
+        const now = new Date().toISOString();
+        const delete_result = db
             .prepare(
-                [
-                    "INSERT INTO",
-                    this.historyTableName,
-                    "(participant_id, type, data, created_at)",
-                    "VALUES",
-                    "($participant_id, $type, $data, $created_at)",
-                ].join(" ")
+                `UPDATE ${this.tableName} SET STATUS=DELETED updated_at=? WHERE document_id=?`
             )
-            .run(newraw);
+            .run(now, documentId);
+        const results = this.findAllByDocumentId(documentId);
+        results.forEach((result) => {
+            const history = {
+                participant_id: result.id,
+                type: "DELETE",
+                data: JSON.stringify({ status: "DELETED", updated_at: now }),
+                created_at: now,
+            };
+            db.prepare(historyinsertsql).run(history);
+        });
+        return delete_result;
+    }
+    updateInvited(documentId) {
+        const now = new Date().toISOString();
+        const update_result = db
+            .prepare(
+                `UPDATE ${this.tableName} SET STATUS=INVITED updated_at=? WHERE document_id=?`
+            )
+            .run(now, documentId);
+        const results = this.findAllByDocumentId(documentId);
+        results.forEach((result) => {
+            const history = {
+                participant_id: result.id,
+                type: "INVITE",
+                data: JSON.stringify({ status: "INVITED", updated_at: now }),
+                created_at: now,
+            };
+            db.prepare(historyinsertsql).run(history);
+        });
+
+        return update_result;
     }
 }

@@ -4,20 +4,31 @@ import { Document } from "./entities/document.entity";
 export class DocumentRepository {
     tableName = "documents";
     historyTableName = "document_histories";
-
+    historyinsertsql = [
+        "INSERT INTO",
+        this.historyTableName,
+        "(document_id, type, data, created_at)",
+        "VALUES",
+        "($document_id, $type, $data, $created_at)",
+    ].join(" ");
     findOne(id) {
         const raw = db
             .prepare(`SELECT * FROM ${this.tableName} WHERE id = ?`)
             .get(id);
         return Document.fromJson(raw);
     }
-    findAll() {
-        const raw = db.prepare(`SELECT * FROM ${this.tableName}`);
-        return Document.fromJson(raw);
+    findAll(offset, size) {
+        var rows = db
+            .prepare(`SELECT * FROM ${this.tableName} LIMIT ? OFFSET ?`)
+            .all(offset, size);
+
+        rows = rows.map((row) => Document.fromJson(row));
+        return rows;
     }
 
     create(raw) {
-        return db
+        const now = new Date().toISOString();
+        const create_result = db
             .prepare(
                 [
                     "INSERT INTO",
@@ -28,35 +39,45 @@ export class DocumentRepository {
                 ].join(" ")
             )
             .run(raw);
-    }
-    delete(id) {
-        console.log(id);
-        return db
-            .prepare(`DELETE FROM ${this.tableName} WHERE id = ? `)
-            .run(id);
-    }
-    updatePublish(id) {
-        return db
-            .prepare(`UPDATE ${this.tableName} SET STATUS=PUBLISH WHERE id=?`)
-            .run(id);
-    }
-    insertDocumentHistory(raw) {
-        const newraw = {
+        const history = {
             document_id: raw.id,
             type: "CREATE",
             data: JSON.stringify(raw),
-            created_at: raw.created_at,
+            created_at: now,
         };
-        return db
+        db.prepare(historyinsertsql).run(history);
+        return create_result;
+    }
+    delete(id) {
+        const now = new Date().toISOString();
+        const delete_result = db
             .prepare(
-                [
-                    "INSERT INTO",
-                    this.historyTableName,
-                    "(document_id, type, data, created_at)",
-                    "VALUES",
-                    "($document_id, $type, $data, $created_at)",
-                ].join(" ")
+                `UPDATE ${this.tableName} SET status=DELETED, updated_at=? WHERE id=?`
             )
-            .run(newraw);
+            .run(now, id);
+        const history = {
+            document_id: id,
+            type: "DELETE",
+            data: JSON.stringify({ status: "DELETED", updated_at: now }),
+            created_at: now,
+        };
+        db.prepare(historyinsertsql).run(history);
+        return delete_result;
+    }
+    updatePublish(id) {
+        const now = new Date().toISOString();
+        const update_result = db
+            .prepare(
+                `UPDATE ${this.tableName} SET STATUS=PUBLISHED, updated_at=?  WHERE id=?`
+            )
+            .run(now, id);
+        const history = {
+            document_id: id,
+            type: "PUBLISH",
+            data: JSON.stringify({ status: "PUBLISHED", updated_at: now }),
+            created_at: now,
+        };
+        db.prepare(historyinsertsql).run(history);
+        return update_result;
     }
 }

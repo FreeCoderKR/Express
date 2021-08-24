@@ -25,7 +25,6 @@ export class DocumentService {
         };
 
         this.documentRepository.create(document_input);
-        this.documentRepository.insertDocumentHistory(document_input);
         participants.forEach((element) => {
             const { name, email } = element;
             if (!name || !email) {
@@ -47,16 +46,28 @@ export class DocumentService {
         });
         return id;
     }
-    readAllDocument() {
-        // const result = this.documentRepository.findAll();
-        // console.log(result);
+    readAllDocument(offset, size) {
+        console.log(offset);
+        console.log(size);
+        let documents = this.documentRepository.findAll(offset, size);
+        if (documents.length != 0) {
+            documents
+                .map(
+                    (document) =>
+                        (document.participant = this.participantRepository
+                            .findAllByDocumentId(documentId)
+                            .map((participant) => participant.toJson()))
+                )
+                .toJson();
+        }
+        return documents;
     }
     readDocument(userId, documentId) {
         if (documentId == null || documentId == "") {
             throw new NotFoundException();
         }
 
-        const document = this.documentRepository.findOne(documentId);
+        let document = this.documentRepository.findOne(documentId);
 
         if (!document) {
             throw new NotFoundException();
@@ -73,15 +84,16 @@ export class DocumentService {
         }
     }
     removeDocument(id) {
-        const result = this.documentRepository.delete(id);
-        if (result.changes == 1) {
+        const delete_result = this.documentRepository.delete(id);
+        if (delete_result.changes == 1) {
+            this.participantRepository.delete(id);
             return true;
         } else {
             return false;
         }
     }
     publishDocument(id) {
-        const result = this.documentRepository.updatePublish(id);
+        const publish_result = this.documentRepository.updatePublish(id);
         if (result.changes == 1) {
             this.participantRepository.updateInvited(id);
             return true;

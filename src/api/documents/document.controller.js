@@ -65,7 +65,15 @@ export default class DocumentController {
     };
 
     findAll = (req, res) => {
-        throw new Error("Method not implemented.");
+        let offset = req.query.offset;
+        let size = req.query.size;
+        if (!offset || offset < 0 || offset > Number.MAX_SAFE_INTEGER) {
+            offset = 0;
+        }
+        if (!size || size < 1 || size > 5) {
+            size = 5;
+        }
+        this.documentService.readAllDocument(offset, size);
     };
 
     publish = (req, res) => {
