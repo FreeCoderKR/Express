@@ -37,6 +37,26 @@ var ParticipantRepository = /*#__PURE__*/function () {
 
       return _participantEntity.Participant.fromJson(raw);
     }
+  }, {
+    key: "findAllByDocumentId",
+    value: function findAllByDocumentId(documentId) {
+      var rows = _database.db.prepare("SELECT * FROM ".concat(this.tableName, " WHERE document_id = ? ")).all(documentId);
+
+      rows = rows.map(function (row) {
+        return _participantEntity.Participant.fromJson(row);
+      });
+      return rows;
+    }
+  }, {
+    key: "create",
+    value: function create(raw) {
+      return _database.db.prepare(["INSERT INTO", this.tableName, "(id, document_id, name, email, status, created_at, updated_at)", "VALUES", "($id, $documentId, $name, $email, $status, $created_at, $updated_at)"].join(" ")).run(raw);
+    }
+  }, {
+    key: "updateInvited",
+    value: function updateInvited(documentId) {
+      return _database.db.prepare("UPDATE ".concat(this.tableName, " SET STATUS=INVITED WHERE document_id=?")).run(documentId);
+    }
   }]);
   return ParticipantRepository;
 }();

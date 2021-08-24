@@ -14,7 +14,8 @@ var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/
 var wrap = function wrap(handler) {
   return /*#__PURE__*/function () {
     var _ref = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee(req, res, next) {
-      var response;
+      var response, reply, _reply;
+
       return _regenerator["default"].wrap(function _callee$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -25,22 +26,36 @@ var wrap = function wrap(handler) {
 
             case 3:
               response = _context.sent;
-              res.json(response, "hi");
+              reply = {
+                success: true,
+                response: response,
+                error: null
+              };
+              res.json(reply);
               next();
-              _context.next = 11;
+              _context.next = 14;
               break;
 
-            case 8:
-              _context.prev = 8;
+            case 9:
+              _context.prev = 9;
               _context.t0 = _context["catch"](0);
-              next(_context.t0);
+              _reply = {
+                success: false,
+                response: null,
+                error: {
+                  status: _context.t0.status,
+                  message: _context.t0.message
+                }
+              };
+              res.json(_reply);
+              next(); // next(err);
 
-            case 11:
+            case 14:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[0, 8]]);
+      }, _callee, null, [[0, 9]]);
     }));
 
     return function (_x, _x2, _x3) {
