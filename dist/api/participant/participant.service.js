@@ -24,9 +24,10 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
 var disableStatuses = Object.freeze(["CREATED", "DELETED"]);
 
 var ParticipantService = /*#__PURE__*/function () {
-  function ParticipantService(participantRepository) {
+  function ParticipantService(participantRepository, documentRepository) {
     (0, _classCallCheck2["default"])(this, ParticipantService);
     this.participantRepository = participantRepository;
+    this.documentRepository = documentRepository;
   }
 
   (0, _createClass2["default"])(ParticipantService, [{
@@ -45,6 +46,37 @@ var ParticipantService = /*#__PURE__*/function () {
         email: participant.email
       });
       return [token, participant.toJson()];
+    }
+  }, {
+    key: "readDocument",
+    value: function readDocument(documentId, participantId) {
+      var document = this.documentRepository.findOne(documentId);
+      var result = this.participantRepository.readDocument(participantId);
+
+      if (result.changes == 1) {
+        return {
+          document: document.toSimpleJson()
+        };
+      } else {
+        return false;
+      }
+    }
+  }, {
+    key: "signDocument",
+    value: function signDocument(participantId) {
+      var participant = this.participantRepository.findById(participantId);
+
+      if (participant.status == "SIGNED") {
+        throw new _index.BadRequestException("이미 서명 했습니다.");
+      }
+
+      var result = this.participantRepository.signDocument(participantId);
+
+      if (result.changes == 1) {
+        return true;
+      } else {
+        return false;
+      }
     }
   }]);
   return ParticipantService;

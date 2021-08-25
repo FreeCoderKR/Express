@@ -2,6 +2,8 @@
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
+var _typeof = require("@babel/runtime/helpers/typeof");
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -28,6 +30,12 @@ var _requestHandler = require("../../lib/request-handler.js");
 var _userRepository = require("./user.repository.js");
 
 var _userService = require("./user.service.js");
+
+var _expressSession = _interopRequireWildcard(require("express-session"));
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 var UserController = /*#__PURE__*/function () {
   function UserController() {
@@ -113,7 +121,7 @@ var UserController = /*#__PURE__*/function () {
     }());
     (0, _defineProperty2["default"])(this, "login", /*#__PURE__*/function () {
       var _ref2 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee2(req, res) {
-        var _req$body2, email, password, _yield$_this$userServ, _yield$_this$userServ2, token, user;
+        var _req$body2, email, password, _yield$_this$userServ, _yield$_this$userServ2, token, user, store;
 
         return _regenerator["default"].wrap(function _callee2$(_context2) {
           while (1) {
@@ -145,25 +153,41 @@ var UserController = /*#__PURE__*/function () {
                 throw new _index.BadRequestException("비밀번호는 최소 8글자 이상입니다.");
 
               case 9:
-                _context2.next = 11;
+                if (req.session.viewCount) {
+                  req.session.viewCount++;
+                } else {
+                  req.session.viewCount = 1;
+                }
+
+                _context2.next = 12;
                 return _this.userService.login({
                   email: email,
                   password: password
                 });
 
-              case 11:
+              case 12:
                 _yield$_this$userServ = _context2.sent;
                 _yield$_this$userServ2 = (0, _slicedToArray2["default"])(_yield$_this$userServ, 2);
                 token = _yield$_this$userServ2[0];
                 user = _yield$_this$userServ2[1];
+                // session store
+                store = req.sessionStore; // Get all sessions in the store as an array.
+
+                store.all(function (err, sessions) {
+                  console.log(sessions); // { sid: { viewCount: 1 } }
+
+                  console.log("count");
+                });
                 req.session.email = email;
                 req.session.status = "user";
+                req.session.userId = user.id;
+                req.session.token = token;
                 return _context2.abrupt("return", {
                   token: token,
                   user: user
                 });
 
-              case 18:
+              case 23:
               case "end":
                 return _context2.stop();
             }

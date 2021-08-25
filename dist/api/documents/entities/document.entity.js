@@ -38,6 +38,18 @@ var Document = /*#__PURE__*/function () {
         updatedAt: this.updatedAt.toISOString()
       };
     }
+  }, {
+    key: "toSimpleJson",
+    value: function toSimpleJson() {
+      return {
+        id: this.id,
+        title: this.title,
+        content: this.content,
+        status: this.status,
+        createdAt: this.createdAt.toISOString(),
+        updatedAt: this.updatedAt.toISOString()
+      };
+    }
   }], [{
     key: "fromJson",
     value: function fromJson(json) {

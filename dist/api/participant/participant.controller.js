@@ -17,7 +17,11 @@ var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/de
 
 var _express = require("express");
 
+var _unauthorizedException = require("../../common/exceptions/unauthorized.exception.js");
+
 var _requestHandler = require("../../lib/request-handler.js");
+
+var _documentRepository = require("../documents/document.repository.js");
 
 var _participantRepository = require("./participant.repository.js");
 
@@ -30,7 +34,7 @@ var ParticipantController = /*#__PURE__*/function () {
     (0, _classCallCheck2["default"])(this, ParticipantController);
     (0, _defineProperty2["default"])(this, "path", "/participant");
     (0, _defineProperty2["default"])(this, "router", (0, _express.Router)());
-    (0, _defineProperty2["default"])(this, "participantService", new _participantService.ParticipantService(new _participantRepository.ParticipantRepository()));
+    (0, _defineProperty2["default"])(this, "participantService", new _participantService.ParticipantService(new _participantRepository.ParticipantRepository(), new _documentRepository.DocumentRepository()));
     (0, _defineProperty2["default"])(this, "token", function (req, res) {
       var _req$body = req.body,
           documentId = _req$body.documentId,
@@ -45,18 +49,38 @@ var ParticipantController = /*#__PURE__*/function () {
           participant = _this$participantServ2[1];
 
       req.session.email = participant.email;
+      req.session.documentId = documentId;
       req.session.status = "participant";
+      req.session.participantId = participant.id;
       return {
         token: token,
         participant: participant
       };
     });
     (0, _defineProperty2["default"])(this, "readDocument", function (req, res) {
-      console.dir(req.session);
-      throw new Error("Method not implemented.");
+      var status = req.session.status;
+      var documentId = req.session.documentId;
+      var participantId = req.session.id;
+
+      if (status == "participant") {
+        return _this.participantService.readDocument(documentId, participantId);
+      } else {
+        throw new _unauthorizedException.UnauthorizedException();
+      }
     });
     (0, _defineProperty2["default"])(this, "sign", function (req, res) {
-      throw new Error("Method not implemented.");
+      var participantId = req.session.id;
+      var signature = req.body.signature;
+
+      if (!signature) {
+        throw new BadRequestException("사인이 없습니다.");
+      }
+
+      if (status == "participant") {
+        return _this.participantService.signDocument(participantId);
+      } else {
+        throw new _unauthorizedException.UnauthorizedException();
+      }
     });
     this.initializeRoutes();
   }

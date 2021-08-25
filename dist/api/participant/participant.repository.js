@@ -120,6 +120,36 @@ var ParticipantRepository = /*#__PURE__*/function () {
       });
       return update_result;
     }
+  }, {
+    key: "readDocument",
+    value: function readDocument(participantId) {
+      var now = new Date().toISOString();
+      var history = {
+        participant_id: participantId,
+        type: "READ_DOCUMENT",
+        data: null,
+        created_at: now
+      };
+      return _database.db.prepare(this.historyinsertsql).run(history);
+    }
+  }, {
+    key: "signDocument",
+    value: function signDocument(participantId) {
+      var now = new Date().toISOString();
+
+      var sign_result = _database.db.prepare("UPDATE ".concat(this.tableName, " SET STATUS=?, updated_at=? WHERE id=?")).run("SIGNED", now, documentId);
+
+      var history = {
+        participant_id: participantId,
+        type: "SIGN",
+        data: JSON.stringify(raw),
+        created_at: now
+      };
+
+      _database.db.prepare(this.historyinsertsql).run(history);
+
+      return sign_result;
+    }
   }]);
   return ParticipantRepository;
 }();
